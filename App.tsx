@@ -1,52 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import {Button, StyleSheet, Text, TextInput, View} from 'react-native';
-import {auth} from './firebase'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { NavigationContainer } from '@react-navigation/native';
+import WeatherScreen from './WeatherScreen';
+import ConnexionScreen from './ConnexionScreen';
+import { auth } from './firebase';
+
+const Tab = createBottomTabNavigator();
 
 const App: React.FC = () => {
-  const [email, setMail] = useState('');
-  const [password, setPassword] = useState('');
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      setIsUserLoggedIn(!!user);
+    });
+    return unsubscribe; // Nettoie l'abonnement lors du démontage
+  }, []);
 
-  // Inscription
-  const registerUser = async (email: string, password: string) => {
-    try {
-    await createUserWithEmailAndPassword(auth, email, password);
-    console.log('Utilisateur inscrit');
-    } catch (error) {
-    console.error(error);
-    }
-  };
-  // Connexion
-  const loginUser = async (email: string, password: string) => {
-    try {
-    await signInWithEmailAndPassword(auth, email, password);
-    console.log('Utilisateur connecté');
-    } catch (error) {
-    console.error(error);
-    }
-  };
-
-  return(
-    <View>
-      <TextInput
-        placeholder='Adresse mail'
-        value = {email}
-        onChangeText = {setMail}
-      />
-      <TextInput
-        placeholder='Mot de passe'
-        value = {password}
-        onChangeText = {setPassword}
-      />
-      <Button
-        title='Inscription'
-        onPress={() => registerUser(email, password)}
-      />
-      <Button
-        title='Connexion'
-        onPress={() => loginUser(email, password)}
-      />
-    </View>
+  return (
+    <NavigationContainer>
+      <Tab.Navigator initialRouteName='Connexion'>
+        <Tab.Screen name='Connexion' component={ConnexionScreen}/>
+        {isUserLoggedIn && <Tab.Screen name='Meteo' component={WeatherScreen} />}
+      </Tab.Navigator>
+    </NavigationContainer>
   )
 }
 
